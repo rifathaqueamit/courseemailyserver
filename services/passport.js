@@ -1,0 +1,40 @@
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const mongoose = require('mongoose');
+const keys = require('./../config/keys');
+
+const User = mongoose.model('users');
+
+// Google Authentication
+passport.serializeUser((user, done) => {
+    done(null, user.id);
+});
+
+passport.deserializeUser((id, done) => {
+    User.findById(id).then(user => {
+        done(null, user);
+    });
+});
+
+passport.use(
+    new GoogleStrategy({
+        clientID: keys.googleClientID,
+        clientSecret: keys.googleClientSecret,
+        callbackURL: '/auth/google/callback'
+    }, (accessToken, refreshToken, profile, done) => {
+        User.findOne({ googleId: profile.id })
+            .then((existingUser) => {
+                if (existingUser) {
+                    // Already created user with the profile.id
+                    done(null, existingUser);
+                } else {
+                    // User not exists. Need to create new user
+                    new User({googleId: profile.id})
+                        .save()
+                        .then((user) => {
+                            done(null, user);
+                        });
+                }
+            })
+    })
+);
