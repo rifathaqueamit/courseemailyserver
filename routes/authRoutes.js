@@ -14,14 +14,20 @@ module.exports = (app) => {
         })
     );
 
-    app.get('/auth/google/callback', passport.authenticate('google'));
+    app.get(
+        '/auth/google/callback',
+        passport.authenticate('google'),
+        (req, res) => {
+            res.redirect('/surveys');
+        }
+    );
 
     // Test purpose
     app.get('/api/current_user', (req, res) => {
         if (req.user) {
             res.send(req.user);
         } else {
-            res.send("Not logged in");
+            res.send("");
         }
     });
 
@@ -29,6 +35,6 @@ module.exports = (app) => {
         if (req.user) {
             req.logout();
         }
-        res.send("Logged out");
+        res.redirect('/');
     });
 };
